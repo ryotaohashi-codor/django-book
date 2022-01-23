@@ -1,5 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 from django.db.models import Avg
 from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
@@ -10,6 +11,8 @@ from django.views.generic import (
     DeleteView, 
     UpdateView,
     )
+
+from .consts import ITEM_PER_PAGE
 from .models import Book, Review
 
 # Create your views here.
@@ -21,16 +24,21 @@ def index_view(request):
         "-avg_rating"
     )
 
+    paginator = Paginator(ranking_list, ITEM_PER_PAGE)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.page(page_number)
+
     return render(
         request,
         "book/index.html",
-        {"object_list": object_list, "ranking_list": ranking_list},
+        {"object_list": object_list, "ranking_list": ranking_list, 'page_obj': page_obj},
     )
 
 
 class ListBookView(LoginRequiredMixin, ListView):
   template_name = "book/book_list.html"
   model = Book
+  paginate_by = ITEM_PER_PAGE
 
 
 class DetailBookView(DetailView):
